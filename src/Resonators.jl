@@ -15,10 +15,11 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     configure(ins, FrequencyStart, startf)
     configure(ins, FrequencyStop, stopf)
     configure(ins, NumPoints, 4001)
-    configure(ins, IFBandwidth, 50)
+    configure(ins, VNA.IFBandwidth, 50)
 
-    configure(ins, Graphs, [1])
-    configure(ins, NumTraces, 1)
+    configure(ins, VNA.Graphs, [1])
+    configure(ins, VNA.NumTraces, 1)
+    configure(ins, VNA.S21, 1, 1)
     configure(ins, VNA.LogMagnitude, 1, 1)
 
     shotgun(ins, markers)
@@ -44,11 +45,15 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
         return
     end
 
-    configure(ins, NumTraces, 3)
-    configure(ins, Graphs, [1 3; 2 3])
+    configure(ins, VNA.Graphs, [1 3; 2 3])
+    configure(ins, VNA.NumTraces, 3)
+    configure(ins, VNA.S21, 1, 1)
+    configure(ins, VNA.S21, 1, 2)
+    configure(ins, VNA.S21, 1, 3)
     configure(ins, VNA.LogMagnitude, 1, 1)
     configure(ins, VNA.Phase, 1, 2)
     configure(ins, VNA.PolarComplex, 1, 3)
+
     configure(ins, FrequencyCenter, fs[1])
     configure(ins, FrequencySpan, span)
 
