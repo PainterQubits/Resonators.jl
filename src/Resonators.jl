@@ -17,6 +17,10 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     configure(ins, NumPoints, 4001)
     configure(ins, IFBandwidth, 50)
 
+    configure(ins, Graphs, [1,2])
+    configure(ins, NumTraces, 1)
+    configure(ins, VNA.LogMagnitude, 1, 1)
+
     shotgun(ins, markers)
     mx = search(ins,
         [MarkerSearch(:RightPeak, 1, 1, m, cutoff, VNA.Negative()) for m in markers]...)
@@ -25,8 +29,7 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
         (mx[m] == mx[m-1] || isnan(mx[m])) && configure(ins, Marker, m, false)
     end
 
-
-
+    mx
 
 end
 
