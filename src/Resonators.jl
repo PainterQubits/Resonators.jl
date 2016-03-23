@@ -44,21 +44,22 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
         return
     end
 
-    configure(ins, NumTraces, count)
-    for i in 1:count
-        configure(ins, VNA.PolarComplex, 1, i)
-        configure(ins, FrequencyCenter, fs[i], 1, i)
-        configure(ins, FrequencySpan, span, 1, i)
-    end
+    configure(ins, NumTraces, 3)
+    configure(ins, Graphs, [1 3; 2 3])
+    configure(ins, VNA.LogMagnitude, 1, 1)
+    configure(ins, VNA.Phase, 1, 2)
+    configure(ins, VNA.PolarComplex, 1, 3)
+    configure(ins, FrequencyCenter, fs[1])
+    configure(ins, FrequencySpan, span)
 
-    count == 2 && configure(ins, Graphs, [1 2])
-    3 <= count <= 4 && configure(ins, Graphs, [1 2; 3 4])
-    5 <= count <= 6 && configure(ins, Graphs, [1 2 3; 4 5 6])
-    7 <= count <= 8 && configure(ins, Graphs, [1 2 3 4; 5 6 7 8])
-    count == 9 && configure(ins, Graphs, [1 2 3; 4 5 6; 7 8 9])
-    10 <= count <= 12 && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
-    13 <= count && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
-
+    # count == 2 && configure(ins, Graphs, [1 2])
+    # 3 <= count <= 4 && configure(ins, Graphs, [1 2; 3 4])
+    # 5 <= count <= 6 && configure(ins, Graphs, [1 2 3; 4 5 6])
+    # 7 <= count <= 8 && configure(ins, Graphs, [1 2 3 4; 5 6 7 8])
+    # count == 9 && configure(ins, Graphs, [1 2 3; 4 5 6; 7 8 9])
+    # 10 <= count <= 12 && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
+    # 13 <= count && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
+    mx
 end
 
 end # module
