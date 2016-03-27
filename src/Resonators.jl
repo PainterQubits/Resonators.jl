@@ -8,13 +8,8 @@ using DataFrames
 import PainterQB.measure
 
 export search_sidecoupled
-export FrequencySweep
 
-type FrequencySweep <: Response
-    ins::InstrumentVNA
-end
-
-function measure(x::FrequencySweep)
+function measure(x::VNA.FSweep)
     df = DataFrame()
 
     configure(x.ins, VNA.NumTraces, 3)
@@ -51,7 +46,6 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     configure(ins, FrequencyStart, startf)
     configure(ins, FrequencyStop, stopf)
     configure(ins, NumPoints, numpts)
-    configure(ins, VNA.IFBandwidth, 500)
 
     configure(ins, VNA.Graphs, [1])
     configure(ins, VNA.NumTraces, 1)
@@ -83,17 +77,10 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
 
     if count == 0
         warning("No peaks were found.")
-        return
     end
 
-    out = DataFrame[]
-    for f in fs
-        configure(ins, VNA.FrequencyCenter, f)
-        configure(ins, VNA.FrequencySpan, span)
-        push!(out, measure(FrequencySweep(ins)))
-    end
+    fs
 
-    out
     # count == 2 && configure(ins, Graphs, [1 2])
     # 3 <= count <= 4 && configure(ins, Graphs, [1 2; 3 4])
     # 5 <= count <= 6 && configure(ins, Graphs, [1 2 3; 4 5 6])
@@ -101,7 +88,8 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     # count == 9 && configure(ins, Graphs, [1 2 3; 4 5 6; 7 8 9])
     # 10 <= count <= 12 && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
     # 13 <= count && configure(ins, Graphs, [1 2 3 4; 5 6 7 8; 9 10 11 12])
-
 end
+
+
 
 end # module
