@@ -33,6 +33,11 @@ function measure(x::VNA.FSweep)
         df[n] = VNA.data(x.ins, VNA.PolarComplex)
     end
 
+    configure(e5071c, VNA.S21)
+    autoscale(e5071c,1,1)
+    autoscale(e5071c,1,2)
+    autoscale(e5071c,1,3)
+
     df
 end
 
