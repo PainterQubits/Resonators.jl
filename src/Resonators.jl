@@ -12,31 +12,31 @@ export search_sidecoupled
 function measure(x::VNA.FSweep)
     df = DataFrame()
 
-    configure(x.ins, VNA.NumTraces, 3)
-    configure(x.ins, VNA.Graphs, [1 2; 1 3])
-    configure(x.ins, VNA.PolarComplex)
-    configure(x.ins, VNA.LogMagnitude, 1, 2)
-    configure(x.ins, VNA.Phase, 1, 3)
-    configure(x.ins, VNA.S21, 1, 2)
-    configure(x.ins, VNA.S21, 1, 3)
-    configure(x.ins, VNA.S21)
-    ti = inspect(x.ins, SweepTime, 1)
+    x.ins[VNA.NumTraces] = 3
+    x.ins[VNA.Graphs] = [1 2; 1 3]
+    x.ins[VNA.Format] = :PolarComplex
+    x.ins[VNA.Format, 1, 2] = :LogMagnitude
+    x.ins[VNA.Format, 1, 3] = :Phase
+    x.ins[VNA.Parameter, 1, 2] = :S21
+    x.ins[VNA.Parameter, 1, 3] = :S21
+    x.ins[VNA.Parameter] = :S21
+    ti = x.ins[SweepTime, 1]
 
-    configure(x.ins, BusTrigger)
+    x.ins[TriggerSource] = :BusTrigger
     trig1(x.ins)
     sleep(ti)
     opc(x.ins)
 
     df[:f] = stimdata(x.ins)
-    for (n,s) in [(:S11, VNA.S11), (:S12, VNA.S12), (:S21, VNA.S21), (:S22, VNA.S22)]
-        configure(x.ins, s)
-        df[n] = VNA.data(x.ins, VNA.PolarComplex)
+    for s in [:S11, :S12, :S21, :S22]
+        x.ins[VNA.Parameter] = s
+        df[s] = VNA.data(x.ins, :PolarComplex)
     end
 
-    configure(e5071c, VNA.S21)
-    autoscale(e5071c,1,1)
-    autoscale(e5071c,1,2)
-    autoscale(e5071c,1,3)
+    x.ins[VNA.Parameter] = :S21
+    autoscale(x.ins,1,1)
+    autoscale(x.ins,1,2)
+    autoscale(x.ins,1,3)
 
     df
 end
@@ -48,15 +48,15 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     stepf = stopf/span
     numpts = length(startf:stepf:stopf)
 
-    configure(ins, FrequencyStart, startf)
-    configure(ins, FrequencyStop, stopf)
-    configure(ins, NumPoints, numpts)
+    ins[FrequencyStart] = startf
+    ins[FrequencyStop] = stopf
+    ins[NumPoints] = numpts
 
-    configure(ins, VNA.Graphs, [1])
-    configure(ins, VNA.NumTraces, 1)
-    configure(ins, VNA.LogMagnitude, 1, 1)
-    configure(ins, VNA.S21)
-    ti = inspect(ins, SweepTime)
+    ins[VNA.Graphs] = [1]
+    ins[VNA.NumTraces] = 1
+    ins[VNA.Format, 1, 1] = :LogMagnitude
+    ins[VNA.Parameter] = :S21
+    ti = ins[SweepTime]
 
     trig1(ins)
     sleep(ti)
@@ -66,15 +66,15 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     mx = search(ins,
         [MarkerSearch(:RightPeak, 1, 1, m, cutoff, VNA.Negative()) for m in markers]...)
 
-    isnan(mx[1]) && configure(ins, VNA.Marker, 1, false)
+    isnan(mx[1]) && (ins[VNA.Marker, 1] = false)
     for m in 2:length(markers)
-        (mx[m] == mx[m-1] || isnan(mx[m])) && configure(ins, VNA.Marker, m, false)
+        (mx[m] == mx[m-1] || isnan(mx[m])) && (ins[VNA.Marker, m] = false)
     end
 
     count = 0
     fs = Float64[]
     for m in markers
-        if inspect(ins, VNA.Marker, m) == true
+        if ins[VNA.Marker, m] == true
             count += 1
             push!(fs, mx[m])
         end
