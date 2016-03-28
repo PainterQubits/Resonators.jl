@@ -28,12 +28,11 @@ function measure(x::VNA.FSweep)
     opc(x.ins)
 
     df[:f] = stimdata(x.ins)
-    for s in [:S11, :S12, :S21, :S22]
+    for s in [:S11, :S21]
         x.ins[VNA.Parameter] = s
         df[s] = VNA.data(x.ins, :PolarComplex)
     end
 
-    x.ins[VNA.Parameter] = :S21
     autoscale(x.ins,1,1)
     autoscale(x.ins,1,2)
     autoscale(x.ins,1,3)
