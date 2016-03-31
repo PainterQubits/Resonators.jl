@@ -2,7 +2,7 @@ module Resonators
 
 using PainterQB
 using PainterQB.VNA
-using PainterQB.E5071CModule
+using PainterQB.E5071C
 using DataFrames
 
 import PainterQB.measure
@@ -12,7 +12,7 @@ export search_sidecoupled
 function measure(x::VNA.FSweep)
     df = DataFrame()
 
-    x.ins[VNA.NumTraces] = 3
+    x.ins[NumTraces] = 3
     x.ins[VNA.Graphs] = [1 2; 1 3]
     x.ins[VNA.Format] = :PolarComplex
     x.ins[VNA.Format, 1, 2] = :LogMagnitude
@@ -21,10 +21,13 @@ function measure(x::VNA.FSweep)
     x.ins[VNA.Parameter, 1, 3] = :S21
     x.ins[VNA.Parameter] = :S21
     ti = x.ins[SweepTime, 1]
+    if (x.ins[Averaging] & x.ins[AveragingTrigger]) == true
+        ti *= x.ins[AveragingFactor]
+    end
 
     x.ins[TriggerSource] = :BusTrigger
     trig1(x.ins)
-    sleep(ti)
+    sleep(ti+10)
     opc(x.ins)
 
     df[:f] = stimdata(x.ins)
@@ -47,12 +50,14 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
     stepf = stopf/span
     numpts = length(startf:stepf:stopf)
 
+    ins[TriggerSource] = :BusTrigger
     ins[FrequencyStart] = startf
     ins[FrequencyStop] = stopf
     ins[NumPoints] = numpts
+    ins[Averaging] = false
 
     ins[VNA.Graphs] = [1]
-    ins[VNA.NumTraces] = 1
+    ins[NumTraces] = 1
     ins[VNA.Format, 1, 1] = :LogMagnitude
     ins[VNA.Parameter] = :S21
     ti = ins[SweepTime]
@@ -83,6 +88,7 @@ function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutof
         warning("No peaks were found.")
     end
 
+    autoscale(ins, 1, 1)
     fs
 
     # count == 2 && configure(ins, Graphs, [1 2])
