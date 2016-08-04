@@ -1,11 +1,11 @@
 module Resonators
 
-using PainterQB
-using PainterQB.VNA
-using PainterQB.E5071C
+using InstrumentControl
+using InstrumentControl.VNA
+using InstrumentControl.E5071C
 using DataFrames
 
-import PainterQB.measure
+import InstrumentControl.measure
 
 export search_sidecoupled
 
