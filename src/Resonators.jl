@@ -3,14 +3,12 @@ module Resonators
 using InstrumentControl
 using InstrumentControl.VNA
 using InstrumentControl.E5071C
-using DataFrames
 
 import InstrumentControl.measure
 
 export search_sidecoupled
 
 function measure(x::VNA.FSweep)
-    df = DataFrame()
 
     old_timeout = x.ins[Timeout]
     old_avgtrig = x.ins[AveragingTrigger]
@@ -43,11 +41,15 @@ function measure(x::VNA.FSweep)
     sleep(sweeptime(x.ins))
     opc(x.ins)
 
-    df[:f] = stimdata(x.ins)
-    for s in [:S11, :S21]
+    npts = x.ins[NumPoints]
+    sparams = [:S11, :S21]
+    result = AxisArray(Array{Complex{Float64}}(npts, length(sparams)),
+        Axis{:f}(stimdata(x.ins)), Axis{:sparam}(sparams))
+    for s in sparams
         x.ins[VNA.Parameter] = s
-        df[s] = VNA.data(x.ins, :PolarComplex)
+        result[Axis{:sparam}(s)] = VNA.data(x.ins, :PolarComplex)
     end
+    result = transpose(result)
 
     autoscale(x.ins,1,1)
     autoscale(x.ins,1,2)
@@ -56,7 +58,8 @@ function measure(x::VNA.FSweep)
     # respect previous settings
     x.ins[Timeout] = old_timeout
     x.ins[AveragingTrigger] = old_avgtrig
-    df
+
+    result
 end
 
 function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutoff=3, span=5e5)
