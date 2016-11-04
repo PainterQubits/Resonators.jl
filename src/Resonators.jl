@@ -1,5 +1,5 @@
 module Resonators
-
+using AxisArrays
 using InstrumentControl
 using InstrumentControl.VNA
 using InstrumentControl.E5071C
