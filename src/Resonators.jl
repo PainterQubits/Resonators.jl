@@ -1,66 +1,9 @@
 module Resonators
-using AxisArrays
 using InstrumentControl
 using InstrumentControl.VNA
 using InstrumentControl.E5071C
 
-import InstrumentControl.measure
-
 export search_sidecoupled
-
-function measure(x::VNA.FSweep)
-
-    old_timeout = x.ins[Timeout]
-    old_avgtrig = x.ins[AveragingTrigger]
-
-    x.ins[Timeout] = 10000
-    x.ins[NumTraces] = 3
-    x.ins[VNA.Graphs] = [1 2; 1 3]
-    x.ins[VNA.Format] = :PolarComplex
-    x.ins[VNA.Format, 1, 2] = :LogMagnitude
-    x.ins[VNA.Format, 1, 3] = :Phase
-    x.ins[VNA.Parameter, 1, 2] = :S21
-    x.ins[VNA.Parameter, 1, 3] = :S21
-    x.ins[VNA.Parameter] = :S21
-    x.ins[TriggerSource] = :BusTrigger
-
-    if x.reject > 0
-        old_avg = x.ins[Averaging]
-        x.ins[Averaging] = false
-        for i in 1:x.reject
-            trig1(x.ins)
-            sleep(sweeptime(x.ins))
-            opc(x.ins)
-        end
-        x.ins[Averaging] = old_avg
-    end
-
-    x.ins[Averaging] && (x.ins[AveragingTrigger] = true)
-
-    trig1(x.ins)
-    sleep(sweeptime(x.ins))
-    opc(x.ins)
-
-    npts = x.ins[NumPoints]
-    sparams = [:S11, :S21]
-    result = AxisArray(Array{Complex{Float64}}(npts, length(sparams)),
-        Axis{:f}(stimdata(x.ins)), Axis{:sparam}(sparams))
-    for s in sparams
-        x.ins[VNA.Parameter] = s
-        result[Axis{:sparam}(s)] = VNA.data(x.ins, :PolarComplex)
-    end
-    result = transpose(result)
-
-    autoscale(x.ins,1,1)
-    autoscale(x.ins,1,2)
-    autoscale(x.ins,1,3)
-
-    # respect previous settings
-    x.ins[Timeout] = old_timeout
-    x.ins[AveragingTrigger] = old_avgtrig
-
-    result
-end
 
 function search_sidecoupled(ins::InstrumentVNA, startf::Real, stopf::Real, cutoff=3, span=5e5)
     startf > stopf && error("Start frequency > stop frequency.")
